@@ -43,14 +43,19 @@
 
 (define (draw-board config)
   (let* ([size (* 8 cell-size)]
-         [target (make-bitmap (+ 20 size) (+ 20 size))]
+         [target (make-bitmap (+ 40 size) (+ 40 size))]
          [dc (new bitmap-dc% [bitmap target])])
-    (send dc set-brush "brown" 'solid)
-    (send dc draw-rectangle 0 0 (+ 20 size) (+ 20 size))
-    (let ([height 10]
+    (send dc set-brush (make-object color%
+                         102
+                         0
+                         0)
+                         'solid)
+    (send dc draw-rectangle 0 0 (+ 40 size) (+ 40 size))
+    (send dc set-font (make-object font% 18 'default))
+    (let ([height 20]
           [bwr 1])
       (for ([row-vector config])
-        (let ([width 10]
+        (let ([width 20]
               [bwc bwr])
           (for ([col row-vector])
             (if (< bwc 0)
@@ -60,10 +65,22 @@
                   width height
                   cell-size cell-size)
             (send dc draw-text (if (empty? col) " " col)
-                  (+ width (/ cell-size 4))
-                  (+ height (/ cell-size 4)))
+                  (+ width (/ cell-size 8))
+                  (+ height (/ cell-size 8)))
             (set! width (+ width cell-size))
             (set! bwc (* -1 bwc))))
         (set! height (+ height cell-size))
         (set! bwr (* -1 bwr))))
+    (send dc set-font (make-object font% 8 'default))
+    (send dc set-text-foreground "white")
+    (let ([w (+ 20 (/ cell-size 4))])
+      (for ([i '(a b c d e f g h)])
+        (send dc draw-text (format "~a" i) w 4)
+        (send dc draw-text (format "~a" i) w (+ size 24))
+        (set! w (+ w cell-size))))
+    (let ([h (+ 20 (/ cell-size 4))])
+      (for ([i (reverse (range 1 9))])
+        (send dc draw-text (format "~a" i) 8 h)
+        (send dc draw-text (format "~a" i) (+ size 26) h)
+        (set! h (+ h cell-size))))
     target))
