@@ -1,6 +1,7 @@
 #lang racket
 
 (require racket/draw)
+(require racket/gui)
 
 (define cell-size 30)
 
@@ -82,6 +83,49 @@
         (set! h (+ h cell-size))))
     target))
 
+(define (draw-board-dc config dc)
+  (let* ([size (* 8 cell-size)])
+    (send dc set-brush (make-object color%
+                         102
+                         0
+                         0)
+          'solid)
+    (send dc draw-rectangle 0 0 (+ 40 size) (+ 40 size))
+    (send dc set-font (make-object font% 18 'default))
+    (send dc set-text-foreground "black")
+    (let ([height 20]
+          [bwr 1])
+      (for ([row-vector config])
+        (let ([width 20]
+              [bwc bwr])
+          (for ([col row-vector])
+            (if (< bwc 0)
+                (send dc set-brush "white" 'solid)
+                (send dc set-brush "gray" 'solid))
+            (send dc draw-rectangle
+                  width height
+                  cell-size cell-size)
+            (send dc draw-text (if (empty? col) " " col)
+                  (+ width (/ cell-size 8))
+                  (+ height (/ cell-size 8)))
+            (set! width (+ width cell-size))
+            (set! bwc (* -1 bwc))))
+        (set! height (+ height cell-size))
+        (set! bwr (* -1 bwr))))
+    (send dc set-font (make-object font% 8 'default))
+    (send dc set-text-foreground "white")
+    (let ([w (+ 20 (/ cell-size 4))])
+      (for ([i '(a b c d e f g h)])
+        (send dc draw-text (format "~a" i) w 4)
+        (send dc draw-text (format "~a" i) w (+ size 24))
+        (set! w (+ w cell-size))))
+    (let ([h (+ 20 (/ cell-size 4))])
+      (for ([i (reverse (range 1 9))])
+        (send dc draw-text (format "~a" i) 8 h)
+        (send dc draw-text (format "~a" i) (+ size 26) h)
+        (set! h (+ h cell-size))))
+    dc))
+
 (define (make-move cfg from to)
   (if (or (not (= (string-length from) 2))
           (not (= (string-length to) 2)))
@@ -111,7 +155,7 @@
 
 (define (deep-copy vec)
   (for/vector ([v vec])
-                  (list->vector (vector->list v))))
+    (list->vector (vector->list v))))
 
 (define chess-board%
   (class object%
@@ -136,5 +180,70 @@
     (define/public (play-rollback)
       (send this rollback)
       (send this draw))
+    (define/public (move-strings)
+      (map (λ (row) (if (string=? (first row) "")
+                        ""
+                        (format "~a -> ~a"
+                                (first row)
+                                (second row))))
+           (send this all-moves)))
+    (define/public (draw-dc dc)
+      (draw-board-dc config dc))
     (super-new)))
- 
+
+(define (gui)
+  (letrec ([main-window (new frame%
+                             [label "Chesser"]
+                             [width 300]
+                             [height 286]
+                             [stretchable-width #f]
+                             [stretchable-height #f]
+                             [style '(no-resize-border
+                                      no-system-menu)])]
+           [board (new chess-board%)]
+           [main-panel (new horizontal-panel%
+                            [parent main-window]
+                            [spacing 10]
+                            [min-height 290])]
+           [canvas (new canvas%
+                        [parent main-panel]
+                        [min-width 286]
+                        [paint-callback (λ (can dc)
+                                          (send board draw-dc dc))])]
+           [control-panel (new vertical-panel%
+                               [parent main-panel]
+                               [style '(border)]
+                               [spacing 2])]
+           [from-txt (new text-field%
+                          [label "from"]
+                          [parent control-panel]
+                          [min-width 100])]
+           [to-txt (new text-field%
+                        [label "to  "]
+                        [parent control-panel]
+                        [min-width 100])]
+           [btn-play (new button%
+                          [label "Go"]
+                          [parent control-panel]
+                          [callback (λ (b e)
+                                      (let ([frm (send from-txt get-value)]
+                                            [to (send to-txt get-value)])
+                                        (send board move frm to)
+                                        (send canvas on-paint)
+                                        (send move-lst set (send board move-strings))))])]
+           [btn-rollback (new button%
+                              [label "Undo"]
+                              [parent control-panel]
+                              [callback (λ (b e)
+                                          (send board rollback)
+                                          (send canvas on-paint)
+                                          (send move-lst set (send board move-strings)))])]
+           [move-lst (new list-box%
+                          [label "Moves"]
+                          [parent control-panel]
+                          [choices '()]
+                          [min-width 200])])
+    (send main-window show #t)
+    main-window))
+                        
+  
