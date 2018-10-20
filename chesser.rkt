@@ -18,9 +18,6 @@
 (define b-knight "\u265E")
 (define b-pawn "\u265F")
 
-(define configs
-  '())
-
 (define (init-config)
   (vector (vector b-rook b-knight b-bishop
                   b-king b-queen b-bishop
@@ -49,7 +46,7 @@
                          102
                          0
                          0)
-                         'solid)
+          'solid)
     (send dc draw-rectangle 0 0 (+ 40 size) (+ 40 size))
     (send dc set-font (make-object font% 18 'default))
     (let ([height 20]
@@ -84,3 +81,60 @@
         (send dc draw-text (format "~a" i) (+ size 26) h)
         (set! h (+ h cell-size))))
     target))
+
+(define (make-move cfg from to)
+  (if (or (not (= (string-length from) 2))
+          (not (= (string-length to) 2)))
+      (error "Not valid from or to")
+      (let ([config (vector-copy cfg)]
+            [frm2 (- (char->integer (string-ref from 0)) 97)]
+            [frm1 (abs (- (char->integer (string-ref from 1)) 48 8))]
+            [to2 (- (char->integer (string-ref to 0)) 97)]
+            [to1 (abs (- (char->integer (string-ref to 1)) 48 8))])
+        (if (or (< frm1 0)
+                (> frm1 7)
+                (< frm2 0)
+                (> frm2 7)
+                (< to1 0)
+                (> to1 7)
+                (< to2 0)
+                (> to2 7))
+            (error "Invalid ranges")
+            (begin
+              (vector-set! (vector-ref config to1)
+                           to2
+                           (vector-ref (vector-ref config frm1) frm2))
+              (vector-set! (vector-ref config frm1)
+                           frm2
+                           empty)
+              config)))))
+
+(define (deep-copy vec)
+  (for/vector ([v vec])
+                  (list->vector (vector->list v))))
+
+(define chess-board%
+  (class object%
+    (field (config (init-config))
+           (move-history (list (list "" "" (deep-copy config)))))
+    (define/public (move arg-from arg-to)
+      (set! config (make-move config arg-from arg-to))
+      (set! move-history (cons (list arg-from arg-to (deep-copy config))
+                               move-history)))
+    (define/public (draw)
+      (draw-board config))
+    (define/public (rollback)
+      (if (= (length move-history) 1)
+          (error "Cannot rollback beyond start configuration")
+          (begin (set! move-history (cdr move-history))
+                 (set! config (third (car move-history))))))
+    (define/public (all-moves)
+      move-history)
+    (define/public (play-move arg1 arg2)
+      (send this move arg1 arg2)
+      (send this draw))
+    (define/public (play-rollback)
+      (send this rollback)
+      (send this draw))
+    (super-new)))
+ 
