@@ -209,11 +209,11 @@
            [from-txt (new text-field%
                           [label "from"]
                           [parent control-panel]
-                          [min-width 100])]
+                          [min-width 80])]
            [to-txt (new text-field%
-                        [label "to  "]
+                        [label "to      "]
                         [parent control-panel]
-                        [min-width 100])]
+                        [min-width 80])]
            [btn-play (new button%
                           [label "Go"]
                           [parent control-panel]
@@ -231,9 +231,10 @@
                                           (send canvas on-paint)
                                           (send move-lst set (send board move-strings)))])]
            [move-lst (new list-box%
-                          [label "Moves"]
+                          [label ""]
                           [parent control-panel]
                           [choices '()]
-                          [min-width 200])])
+                          [min-width 80])])
     (send main-window show #t)
     main-window))
+
