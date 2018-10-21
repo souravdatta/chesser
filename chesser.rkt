@@ -43,11 +43,7 @@
   (let* ([size (* 8 cell-size)]
          [target (make-bitmap (+ 40 size) (+ 40 size))]
          [dc (new bitmap-dc% [bitmap target])])
-    (send dc set-brush (make-object color%
-                         102
-                         0
-                         0)
-          'solid)
+    (send dc set-brush "white" 'solid)
     (send dc draw-rectangle 0 0 (+ 40 size) (+ 40 size))
     (send dc set-font (make-object font% 18 'default))
     (let ([height 20]
@@ -85,12 +81,8 @@
 
 (define (draw-board-dc config dc)
   (let* ([size (* 8 cell-size)])
-    (send dc set-brush (make-object color%
-                         102
-                         0
-                         0)
+    (send dc set-brush "white"
           'solid)
-    (send dc draw-rectangle 0 0 (+ 40 size) (+ 40 size))
     (send dc set-font (make-object font% 18 'default))
     (send dc set-text-foreground "black")
     (let ([height 20]
@@ -113,7 +105,7 @@
         (set! height (+ height cell-size))
         (set! bwr (* -1 bwr))))
     (send dc set-font (make-object font% 8 'default))
-    (send dc set-text-foreground "white")
+    (send dc set-text-foreground "black")
     (let ([w (+ 20 (/ cell-size 4))])
       (for ([i '(a b c d e f g h)])
         (send dc draw-text (format "~a" i) w 4)
@@ -212,7 +204,7 @@
                                           (send board draw-dc dc))])]
            [control-panel (new vertical-panel%
                                [parent main-panel]
-                               [style '(border)]
+                               ;[style '(border)]
                                [spacing 2])]
            [from-txt (new text-field%
                           [label "from"]
@@ -245,5 +237,3 @@
                           [min-width 200])])
     (send main-window show #t)
     main-window))
-                        
-  
