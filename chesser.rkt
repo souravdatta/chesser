@@ -21,7 +21,7 @@
 
 (define (init-config)
   (vector (vector b-rook b-knight b-bishop
-                  b-king b-queen b-bishop
+                  b-queen b-king b-bishop
                   b-knight b-rook)
           (vector b-pawn b-pawn b-pawn b-pawn
                   b-pawn b-pawn b-pawn b-pawn)
@@ -36,14 +36,14 @@
           (vector w-pawn w-pawn w-pawn w-pawn
                   w-pawn w-pawn w-pawn w-pawn)
           (vector w-rook w-knight w-bishop
-                  w-king w-queen w-bishop
+                  w-queen w-king w-bishop
                   w-knight w-rook)))
 
 (define (draw-board config)
   (let* ([size (* 8 cell-size)]
          [target (make-bitmap (+ 40 size) (+ 40 size))]
          [dc (new bitmap-dc% [bitmap target])])
-    (send dc set-brush "white" 'solid)
+    (send dc set-brush "gray" 'solid)
     (send dc draw-rectangle 0 0 (+ 40 size) (+ 40 size))
     (send dc set-font (make-object font% 18 'default))
     (let ([height 20]
@@ -53,8 +53,8 @@
               [bwc bwr])
           (for ([col row-vector])
             (if (< bwc 0)
-                (send dc set-brush "white" 'solid)
-                (send dc set-brush "gray" 'solid))
+                (send dc set-brush "gray" 'solid)
+                (send dc set-brush "white" 'solid))
             (send dc draw-rectangle
                   width height
                   cell-size cell-size)
@@ -92,8 +92,8 @@
               [bwc bwr])
           (for ([col row-vector])
             (if (< bwc 0)
-                (send dc set-brush "white" 'solid)
-                (send dc set-brush "gray" 'solid))
+                (send dc set-brush "gray" 'solid)
+                (send dc set-brush "white" 'solid))
             (send dc draw-rectangle
                   width height
                   cell-size cell-size)
@@ -235,6 +235,6 @@
                           [parent control-panel]
                           [choices '()]
                           [min-width 80])])
-    (send main-window show #t)
-    main-window))
+    (send main-window show #t)))
 
+(gui)
